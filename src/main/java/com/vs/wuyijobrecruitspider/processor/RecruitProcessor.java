@@ -21,7 +21,7 @@ import us.codecraft.webmagic.selector.Html;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-@Component
+//@Component
 public class RecruitProcessor implements PageProcessor {
     @Autowired
     private SpringDataPipeline springDataPipeline;
