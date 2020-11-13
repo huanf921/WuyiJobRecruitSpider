@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>查询</title>
+    <base th:href="@{/}">
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/pagination.css"/>
+    <script type="text/javascript" src="jquery/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="bootstrap/js/bootstrap.js"></script>
+    <script type="text/javascript" src="script/docs.min.js"></script>
+    <script type="text/javascript" src="layer/layer.js"></script>
+    <script type="text/javascript" src="jquery/jquery.pagination.js"></script>
+<!--    <script type="text/javascript" src="spider/my-pagination.js"></script>-->
+    <script type="text/javascript">
+        var pageSize = 10;//设置每页显示条数
+        var total;//数据总条数
+        var keyword = "";
+        var infoArr = new Array();
+        var firstJobId = -1;
+        var curIdx = -1;
+        // 获取页面表格信息
+        function generatePage(pageIndex) {
+            $.ajax({
+                "url": "/job/showpage",
+                "type": "post",
+                "data": {
+                    "pageNum": pageIndex,
+                    "pageSize": pageSize,
+                    "keyword": keyword
+                },
+                "async": false,
+                "dataType": "json",
+                success: function (pageInfo){
+                    if (pageInfo == null || pageInfo == undefined || pageInfo.content.length == 0) {
+                        $("#jobPageBody").append("<tr><td colspan='8'>抱歉！没有查询到您要的数据！</td></tr>");
+                    }
+                    var jobs = pageInfo.content;
+                    console.log("本次查询到的数据量："+pageInfo.totalElements)
+                    total = pageInfo.totalElements;
+                    console.log("本次查询到的数据所在页："+pageInfo.number)
+                    curIdx = pageInfo.number;
+                    fillTableBody(jobs);
+                },
+                error: function (xhr) {
+                    layer.msg("服务器端程序调用失败！响应状态码是=" + xhr.status + "说明信息=" + xhr.statusText);
+                }
+            });
+        }
+
+        // 填充表格
+        function fillTableBody(jobs) {
+            // 清除tbody中的旧的数据
+            $("#jobPageBody").empty();
+            // 为了搜索没有结果时不显示页码
+            $("#Pagination").empty();
+            // 填充tbody
+            for (var i = 0; i < jobs.length; i++) {
+                // console.log("开始第"+(i + 1)+"次填充tbody");
+                var job = jobs[i];
+                var jobId = job.id;
+                var jobName = job.jobName;
+                var companyName = job.companyName;
+                var jobInfo = job.jobInfo;
+                var companyInfo = job.companyInfo;
+                var companyAddr = job.companyAddr;
+                var time = job.time;
+                var url = job.url;
+
+                if (i == 0) {
+                    firstJobId = jobId;
+                }
+                var jobIdTd = "<td>" + jobId + "</td>"
+                var jobNameTd = "<td><a href='" + url + "'>" + jobName + "</td>"
+                var companyNameTd = "<td>" + companyName + "</td>"
+                var jobInfoTd = "<td><span class='detail' id='jobInfo" + jobId + "'>详情</span>" + "</td>"
+                let companyInfoTd = "<td><span class='detail' id='companyInfo" + jobId + "'>详情</span>" + "</td>";
+                var curInfo = {"jobInfo": jobInfo, "companyInfo": companyInfo};
+                infoArr[i] = curInfo;
+                var companyAddrTd = "<td>" + companyAddr + "</td>"
+                var timeTd = "<td>" + time + "</td>"
+
+                // 通过button标签的id属性把roleId值传递到button按钮的单击响应函数中
+                var starBtn = "<button id='" + jobId + "' type='button' class='btn btn-success btn-xs checkBtn'><i class=' glyphicon glyphicon-check'></i></button>";
+                var buttonTd = "<td>" + starBtn + "</td>";
+                var tr = "<tr>" + jobIdTd + jobNameTd + companyNameTd + jobInfoTd + companyInfoTd + companyAddrTd + timeTd + buttonTd + "</tr>";
+                $("#jobPageBody").append(tr);
+
+                // 4.给职位信息和公司信息的“详情”文本绑定单响函数
+                for (let i = 0; i < pageSize; i++) {
+                    var curJobId = firstJobId + i;
+                    // var idx = i - 1;
+                    var str = "#jobInfo" + curJobId;
+                    // console.log(str)
+                    $(str).click(
+                        function () {
+                            $("#jobShow").html(infoArr[i].jobInfo);
+                            $("#jobModal").modal("show");
+                            // console.log("第"+(i+1)+"个job的工作信息："+window.infoArr[i].jobInfo);
+                        }
+                    )
+                    $("#companyInfo" + curJobId).click(
+                        function () {
+                            // console.log("第"+(i+1)+"个job的公司信息："+window.infoArr[i].companyInfo);
+                            $("#companyShow").html(infoArr[i].companyInfo);
+                            $("#companyModal").modal("show");
+                        }
+                    )
+                }
+            }
+        }
+        // 生成分页页码导航条
+        function generateNavigator() {
+            // 调用 pagination()函数
+            $("#Pagination").pagination(total, {
+                num_edge_entries: 3,
+                num_display_entries: 5,
+                callback: paginationCallBack,
+                items_per_page: pageSize,
+                current_page: curIdx,
+                prev_text: "上一页",
+                next_text: "下一页"
+            });
+        }
+        // 翻页时的回调函数
+        function paginationCallBack(index, jq) {
+            console.log("cb被调用！！")
+            // 调用分页函数
+            generatePage(index);
+            // 取消页码超链接的默认行为
+            return false;
+        }
+        $(function () {
+            // 2.调用执行分页的函数，执行分页的效果
+            generatePage(0);
+            generateNavigator();
+
+            $(".list-group-item").click(function(){
+                if ( $(this).find("ul") ) {
+                    $(this).toggleClass("tree-closed");
+                    if ( $(this).hasClass("tree-closed") ) {
+                        $("ul", this).hide("fast");
+                    } else {
+                        $("ul", this).show("fast");
+                    }
+                }
+            });
+            // 3.给查询按钮绑定单击响应函数
+            $("#searchBtn").click(function () {
+                // 1.获取关键词数据赋值给全局变量
+                window.keyword = $("#keywordInput").val();
+                // 2,调用分页函数刷新页面
+                // console.log("查询关键词数据的第"+window.pageNum+"页");
+                generatePage(0);
+                generateNavigator();
+            });
+
+            //5.给模态框确认按钮绑定单响函数
+            $("#jobCloseBtn").click(
+                function (){
+                    $("#jobModal").modal("hide");
+                }
+            )
+            $("#companyCloseBtn").click(
+                function (){
+                    $("#companyModal").modal("hide");
+                }
+            )
+
+            // 6.给收藏按钮绑定单响函数
+            $(".checkBtn").click(function () {
+                var jobId = this.id;
+                var userId = $("#userIdInput").val();
+                // 发送ajax请求将两个id传到controller，存入中间表，返回相应，layer打印成功即可
+                $.ajax()
+            })
+        });
+    </script>
+    <style>
+        .tree li {
+            list-style-type: none;
+            cursor:pointer;
+        }
+        .tree-closed {
+            height : 40px;
+        }
+        .tree-expanded {
+            height : auto;
+        }
+    </style>
+</head>
+<body>
+    <input id="userIdInput" type="text" th:value="${session.user.id}" hidden="hidden">
+    <div th:replace="modal-job :: job"></div>
+    <div th:replace="modal-company :: company"></div>
+    <div th:replace="head :: head"></div>
+    <div class="container-fluid">
+        <div class="row">
+            <div th:replace="sidebar :: sidebar"></div>
+            <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title"><i class="glyphicon glyphicon-th"></i> 招聘汇总</h3>
+                    </div>
+                    <div class="panel-body">
+                        <form class="form-inline" role="form" style="float:left;">
+                            <div class="form-group has-feedback">
+                                <div class="input-group">
+                                    <div class="input-group-addon">关键字</div>
+                                    <input id="keywordInput" class="form-control has-success" type="text"
+                                           placeholder="请输入查询关键字">
+                                </div>
+                            </div>
+                            <button id="searchBtn" type="button" class="btn btn-warning"><i
+                                    class="glyphicon glyphicon-search"></i> 查询
+                            </button>
+                        </form>
+                        <br>
+                        <hr style="clear:both;">
+                        <div class="table-responsive">
+                            <table class="table  table-bordered">
+                                <thead>
+                                <tr>
+                                    <th width="30">#</th>
+                                    <th>职位名称</th>
+                                    <th>公司名称</th>
+                                    <th>职位信息</th>
+                                    <th>公司信息</th>
+                                    <th>工作地点</th>
+                                    <th>最近发布时间</th>
+                                    <th>收藏</th>
+                                </tr>
+                                </thead>
+                                <tbody id="jobPageBody">
+<!--                                <td th:if="${jobList}==null" colspan="8" align="center">抱歉！没有查询到您要的数据！</td>-->
+                                </tbody>
+                                <tfoot>
+                                <tr>
+                                    <td colspan="8" align="center">
+                                        <div id="Pagination" class="pagination"><!-- 这里显示分页 --></div>
+                                    </td>
+                                </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

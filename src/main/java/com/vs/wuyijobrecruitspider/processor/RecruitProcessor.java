@@ -27,7 +27,7 @@ public class RecruitProcessor implements PageProcessor {
     private SpringDataPipeline springDataPipeline;
 
     private int pageNum = 1;
-    private String url = "https://search.51job.com/list/030200%252c040000,000000,0100%252c7700%252c7200%252c7900%252c2700,00,9,99,+,2,1.html?lang=c&postchannel=0000&workyear=99&cotype=99&degreefrom=99&jobterm=99&companysize=99&ord_field=0&dibiaoid=0&line=&welfare=";
+    private String url = "https://search.51job.com/list/000000,000000,0100%252c7700%252c7200%252c7900%252c2700,00,9,99,+,2,1.html?lang=c&postchannel=0000&workyear=99&cotype=99&degreefrom=99&jobterm=99&companysize=99&ord_field=0&dibiaoid=0&line=&welfare=";
     private SimpleDateFormat formatter = new SimpleDateFormat("yyyy-");
     private String today = formatter.format(new Date());
     private Site site = Site.me()
@@ -58,9 +58,9 @@ public class RecruitProcessor implements PageProcessor {
                     //把获取到的url地址放到任务队列中
                     page.addTargetRequest(String.valueOf(resObj.get("job_href")));
                 }
-                if (pageNum < 401) {
+                if (pageNum < 402) {
                     // 获取下一页的url
-                    String bkUrl = "https://search.51job.com/list/030200%252c040000,000000,0100%252c7700%252c7200%252c7900%252c2700,00,9,99,+,2," + (++pageNum) + ".html?lang=c&postchannel=0000&workyear=99&cotype=99&degreefrom=99&jobterm=99&companysize=99&ord_field=0&dibiaoid=0&line=&welfare=";
+                    String bkUrl = "https://search.51job.com/list/000000,000000,0100%252c7700%252c7200%252c7900%252c2700,00,9,99,+,2," + (++pageNum) + ".html?lang=c&postchannel=0000&workyear=99&cotype=99&degreefrom=99&jobterm=99&companysize=99&ord_field=0&dibiaoid=0&line=&welfare=";
                     // 把url放到任务队列中
                     page.addTargetRequest(bkUrl);
                 }

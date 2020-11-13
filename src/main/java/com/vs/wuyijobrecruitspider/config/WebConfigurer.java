@@ -9,5 +9,6 @@ public class WebConfigurer implements WebMvcConfigurer {
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
         registry.addViewController("/").setViewName("login");
+        registry.addViewController("/job/show").setViewName("query");
     }
 }
