@@ -89,4 +89,14 @@ public class JobInfoServiceImpl implements JobInfoService {
         //返回的数据都封装在了Page<JobInfo>对象中
         return page;
     }
+
+    @Override
+    public Integer getJobsBySalary(Integer minSalary, Integer maxSalary) {
+        return jobInfoDao.findJobsBySalary(minSalary, maxSalary);
+    }
+
+    @Override
+    public Integer getJobsBySalary(Integer minSalary) {
+        return jobInfoDao.findJobsBySalary(minSalary);
+    }
 }

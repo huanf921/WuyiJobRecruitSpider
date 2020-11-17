@@ -48,4 +48,10 @@ public class UserServiceImpl implements UserService {
         List<Map<String, Object>> jobList = userDao.findJobList(userId);
         return jobList;
     }
+
+    @Override
+    public Integer getJobsByAddr(String address) {
+
+        return userDao.findJobsByAddr(address);
+    }
 }

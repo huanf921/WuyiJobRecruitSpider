@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpSession;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -53,10 +55,12 @@ public class JobController {
     }
 
     @RequestMapping("/logout")
-    public String doLogout(HttpSession session) {
+    public String doLogout(Model model, HttpSession session) {
         //强制session失效
         session.invalidate();
-        return "redirect:/job/login";
+        model.addAttribute("userNotExist", null);
+        model.addAttribute("passwordError", null);
+        return "redirect:/user/login";
     }
 
     @RequestMapping("/showpage")
@@ -91,6 +95,59 @@ public class JobController {
         List<Map<String, Object>> jobList = userService.getJobListByUserId(userId);
 
         return jobList;
+    }
+
+    @RequestMapping("/getjobaddr")
+    @ResponseBody
+    public List<Map<String, Object>> getJobAddr() {
+        List<Map<String, Object>> res = new ArrayList<>();
+        String[] addresses = {"广州", "深圳", "上海", "武汉", "北京", "宁波", "成都", "苏州", "南京", "杭州"};
+
+        // 分别获取主要地区的岗位数量，返回前端
+        for (String address : addresses) {
+            Integer jobCount = userService.getJobsByAddr(address);
+            HashMap<String, Object> addrJobsMap = new HashMap<>();
+            addrJobsMap.put("city", address);
+            addrJobsMap.put("count", jobCount);
+            res.add(addrJobsMap);
+        }
+
+        return res;
+    }
+
+    @RequestMapping("/getjobsalary")
+    @ResponseBody
+    public List<Map<String, Object>> getJobSalary() {
+        List<Map<String, Object>> res = new ArrayList<>();
+        int[] salary = {5 * 1000 * 12, 10 * 1000 * 12, 20 * 1000 * 12, 30 * 1000 * 12};
+        Integer minSalary = 0;
+        Integer maxSalary = 0;
+        // 分别获取对应薪资范围的岗位数量，返回前端
+        for (int i = 0; i < salary.length; i++) {
+            String salaryRange = "";
+            Integer jobCount = 0;
+            if (i == 0) {
+                salaryRange = salary[i] + "以下";
+                minSalary = 0;
+                maxSalary = salary[i];
+                jobCount = jobService.getJobsBySalary(minSalary, maxSalary);
+            } else if (i == salary.length - 1) {
+                salaryRange = salary[i] + "以上";
+                jobCount = jobService.getJobsBySalary(salary[i]);
+            } else {
+                salaryRange = salary[i - 1] + "~" + salary[i];
+                minSalary = salary[i - 1];
+                maxSalary = salary[i];
+                jobCount = jobService.getJobsBySalary(minSalary, maxSalary);
+            }
+
+            Map<String, Object> salaryJobsMap = new HashMap<>();
+            salaryJobsMap.put("salary", salaryRange);
+            salaryJobsMap.put("count", jobCount);
+            res.add(salaryJobsMap);
+        }
+
+        return res;
     }
 
     @RequestMapping("/savestar")

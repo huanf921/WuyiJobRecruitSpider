@@ -132,7 +132,7 @@ public class RecruitProcessor implements PageProcessor {
     }
 
     // 设置定时启动
-    @Scheduled(initialDelay = 1000, fixedDelay = 1000000 * 1000)
+    @Scheduled(initialDelay = 1000, fixedDelay = 24 * 60 * 60 * 1000)
     public void process() {
         Spider.create(new RecruitProcessor())
                 .addUrl(url)

@@ -25,4 +25,7 @@ public interface UserDao extends Repository<User, Integer> {
 
     @Query(value = "select job_name jobName, url, company_name companyName, company_addr companyAddr, `time` from job_info j, user_starjob u where j.id = u.job_id and u.user_id = ?", nativeQuery = true)
     List<Map<String, Object>> findJobList(Integer userId);
+
+    @Query(value = "select count(*) from job_info where company_addr like concat(? ,\"%\")", nativeQuery = true)
+    Integer findJobsByAddr(String address);
 }

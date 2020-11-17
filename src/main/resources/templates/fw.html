@@ -2,36 +2,66 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>登录</title>
+    <title>测试</title>
     <link href="../static/bootstrap/css/bootstrap-theme.min.css" rel="stylesheet">
     <link href="../static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 
     <script src="../static/bootstrap/js/bootstrap.min.js"></script>
     <script src="../static/jquery/jquery-2.1.1.min.js"></script>
-
+    <script type="text/javascript" src="script/echarts.js"></script>
+    <script type="text/javascript" src="script/echarts-westeros.js"></script>
     <style>
-        body{
-            background-image: url("../static/img/login.png");
-            background-size: cover;
-        }
-        .btn-mylg{
-            width: 400px;
-            height: 137px;
-            position: absolute;
-            top: 497px;
-            left: 570px;
-            border-radius: 90px;
-            padding-bottom: 14px;
-        }
-        .log{
-            font-size: 40px;
-            font-family: verdana;
-            font-weight: bold;
+        /*body{*/
+        /*    background-image: url("../static/img/login.png");*/
+        /*    background-size: cover;*/
+        /*}*/
+        /*.btn-mylg{*/
+        /*    width: 400px;*/
+        /*    height: 137px;*/
+        /*    position: absolute;*/
+        /*    top: 497px;*/
+        /*    left: 570px;*/
+        /*    border-radius: 90px;*/
+        /*    padding-bottom: 14px;*/
+        /*}*/
+        /*.log{*/
+        /*    font-size: 40px;*/
+        /*    font-family: verdana;*/
+        /*    font-weight: bold;*/
 
-        }
+        /*}*/
     </style>
+
 </head>
 <body>
-    <button type="button" class="btn btn-success btn-mylg"><font class="log">Let's go!!!</font></button>
+<!--    <button type="button" class="btn btn-success btn-mylg"><font class="log">Let's go!!!</font></button>-->
+    <div id="main" style="width: 700px;height: 400px"></div>
+
+    <script type="text/javascript">
+        var myChart = echarts.init(document.getElementById('main'));
+
+        // 指定图表的配置项和数据
+        var option = {
+            title: {
+                text: '静态 岗位-地点分布柱状图'
+            },
+            tooltip: {},
+            legend: {
+                data:['岗位数量']
+            },
+            xAxis: {
+                data: ["广州","深圳","上海","武汉","北京","宁波","成都","苏州","南京","杭州"]
+            },
+            yAxis: {},
+            series: [{
+                name: '岗位数量',
+                type: 'bar',
+                data: [1773, 2715, 2479, 1647, 866, 629, 755, 720, 832, 895]
+            }]
+        };
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+
+    </script>
 </body>
 </html>

@@ -23,6 +23,26 @@
     <script type="text/javascript" src="script/docs.min.js"></script>
     <script type="text/javascript" src="layer/layer.js"></script>
     <script type="text/javascript" src="script/echarts.js"></script>
+    <script type="text/javascript" src="script/echarts-westeros.js"></script>
+
+</head>
+<body>
+    <input id="userIdInput" type="text" th:value="${session.user.id}" hidden="hidden">
+    <div th:replace="modal-star :: star"></div>
+    <div th:replace="modal-help :: help"></div>
+    <div th:replace="head :: head"></div>
+    <div class="container-fluid">
+        <div class="row">
+            <div th:replace="sidebar :: sidebar"></div>
+            <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+                <!--必须指定宽高-->
+                <div style="margin-top: 75px;">
+                    <div id="main1" style="display: inline-block; width: 650px; height: 500px"></div>
+                    <div id="main2" style="display: inline-block; width: 450px; height: 500px"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script type="text/javascript">
 
@@ -42,6 +62,19 @@
                     }
                 }
             })
+
+            // 给导航栏帮助按钮绑定单响函数，调出模态框，展示帮助
+            $("#getHelp").click(function (){
+                $("#helpShow").html("本求职助手系统爬取了 51Job（前程无忧） 招聘网站上的 top 20000 条" +
+                    "互联网相关职位，<br>且支持岗位查询（包含关键词查询）和统计分析（包含职位信息的地区统计和薪资区间统计）相关功能。<br>" +
+                    "用户可以对感兴趣的职位进行收藏，且随时对已收藏职位进行查看，希望本系统能帮助到您 q(≧▽≦q)");
+                $("#helpModal").modal("show");
+            })
+            $("#helpCloseBtn").click(
+                function (){
+                    $("#helpModal").modal("hide");
+                }
+            )
 
             // 给导航栏收藏按钮绑定单响函数，调出模态框，展示收藏数据
             $("#getStar").click(
@@ -86,21 +119,75 @@
                     $("#starModal").modal("hide");
                 }
             )
+
+            var jobAddrArr = null;
+            $.ajax({
+                "url": "/job/getjobaddr",
+                "type": "post",
+                "async": false,
+                "dataType": "json",
+                success: function (jobAddrList){
+                    jobAddrArr = jobAddrList;
+                },
+                error: function (xhr){
+                    console.log("获取统计数据失败！响应状态码是=" + xhr.status + "说明信息=" + xhr.statusText);
+                    layer.msg("服务器忙，请稍后重试")
+                }
+            });
+
+            var myChart1 = echarts.init(document.getElementById('main1'), 'westeros');
+            var myChart2 = echarts.init(document.getElementById('main2'), 'westeros');
+
+            var cityArr = new Array();
+            var jobCountArr = new Array();
+            var pieArr = new Array();
+            for (let i = 0; i < jobAddrArr.length; i++) {
+                cityArr.push(jobAddrArr[i].city);
+                jobCountArr.push(parseInt(jobAddrArr[i].count));
+                pieArr.push({"value": parseInt(jobAddrArr[i].count), "name": jobAddrArr[i].city});
+            }
+
+            // 指定图表的配置项和数据
+            var option1 = {
+                title: {
+                    text: '岗位-地点分布柱状图'
+                },
+                tooltip: {},
+                legend: {
+                    data:['岗位数量']
+                },
+                xAxis: {
+                    data: cityArr
+                },
+                yAxis: {},
+                series: [{
+                    name: '岗位数量',
+                    type: 'bar',
+                    data: jobCountArr
+                }]
+            };
+
+            var option2 = {
+                title:{
+                    text:'岗位-地点分布饼状图',
+                },
+                tooltip: {},
+                legend: {
+                  data: ['岗位数量']
+                },
+                series : [
+                    {
+                        name: '岗位数量',
+                        type: 'pie',    // 设置图表类型为饼图
+                        radius: '60%',  // 饼图的半径
+                        data: pieArr
+                    }
+                ]
+            }
+            // 使用刚指定的配置项和数据显示图表。
+            myChart1.setOption(option1);
+            myChart2.setOption(option2);
         })
     </script>
-
-</head>
-<body>
-    <input id="userIdInput" type="text" th:value="${session.user.id}" hidden="hidden">
-    <div th:replace="modal-star :: star"></div>
-    <div th:replace="head :: head"></div>
-    <div class="container-fluid">
-        <div class="row">
-            <div th:replace="sidebar :: sidebar"></div>
-            <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-                test1
-            </div>
-        </div>
-    </div>
 </body>
 </html>

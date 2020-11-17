@@ -27,4 +27,8 @@ public interface JobInfoService {
      * @return
      */
     Page<JobInfo> findJobInfoByPage(String keyword, Integer pageNum, Integer pageSize);
+
+    Integer getJobsBySalary(Integer minSalary, Integer maxSalary);
+
+    Integer getJobsBySalary(Integer minSalary);
 }

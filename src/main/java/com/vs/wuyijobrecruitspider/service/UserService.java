@@ -15,4 +15,6 @@ public interface UserService {
     void removeUserStar(Integer jobId, Integer userId);
 
     List<Map<String, Object>> getJobListByUserId(Integer userId);
+
+    Integer getJobsByAddr(String address);
 }

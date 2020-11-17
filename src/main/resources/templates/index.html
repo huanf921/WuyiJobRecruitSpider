@@ -27,6 +27,18 @@
                 }
             )
 
+            // 给导航栏帮助按钮绑定单响函数，调出模态框，展示帮助
+            $("#getHelp").click(function (){
+                $("#helpShow").html("本求职助手系统爬取了 51Job（前程无忧） 招聘网站上的 top 20000 条" +
+                    "互联网相关职位，<br>且支持岗位查询（包含关键词查询）和统计分析（包含职位信息的地区统计和薪资区间统计）相关功能。<br>" +
+                    "用户可以对感兴趣的职位进行收藏，且随时对已收藏职位进行查看，希望本系统能帮助到您 q(≧▽≦q)");
+                $("#helpModal").modal("show");
+            })
+            $("#helpCloseBtn").click(
+                function (){
+                    $("#helpModal").modal("hide");
+                }
+            )
             // 给导航栏收藏按钮绑定单响函数，调出模态框，展示收藏数据
             $("#getStar").click(
                 function (){
@@ -87,6 +99,7 @@
 <body>
     <input id="userIdInput" type="text" th:value="${session.user.id}" hidden="hidden">
     <div th:replace="modal-star :: star"></div>
+    <div th:replace="modal-help :: help"></div>
     <div th:replace="head :: head"></div>
     <div class="container-fluid">
         <div class="row">
