@@ -8,6 +8,24 @@
     <link rel="stylesheet" href="css/font-awesome.min.css">
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/pagination.css"/>
+
+    <style type="text/css">
+        .detail {
+            color: #40AFFE;
+        }
+        .detail:hover {
+            color: #1155BB;
+            cursor: pointer;
+        }
+        .detail:visited {
+            color: darkorchid;
+        }
+        .starImg {
+            width: 15px;
+            height: 15px;
+        }
+    </style>
+
     <script type="text/javascript" src="jquery/jquery-2.1.1.min.js"></script>
     <script type="text/javascript" src="bootstrap/js/bootstrap.js"></script>
     <script type="text/javascript" src="script/docs.min.js"></script>
@@ -15,14 +33,42 @@
     <script type="text/javascript" src="jquery/jquery.pagination.js"></script>
 <!--    <script type="text/javascript" src="spider/my-pagination.js"></script>-->
     <script type="text/javascript">
+        $("#queryPage").click(
+            function (){
+                window.location.href = "/job/show"
+            }
+        )
+
         var pageSize = 10;//设置每页显示条数
         var total;//数据总条数
         var keyword = "";
         var infoArr = new Array();
         var firstJobId = -1;
         var curIdx = -1;
+        var starArr;
+        var pageNum;
+
         // 获取页面表格信息
         function generatePage(pageIndex) {
+            pageNum = pageIndex;
+            // 1.取到用户已收藏 jobId
+            $.ajax({
+                "url": "/job/getstar",
+                "type": "post",
+                "async": false,
+                "dataType": "json",
+                success: function (jobIdList){
+                    // console.log(jobIdList);
+                    // console.log(jobIdList.length);
+                    starArr = jobIdList;
+                    // console.log("从服务器获取到的收藏列表：" + starArr)
+                },
+                error: function (xhr) {
+                    console.log("获取收藏数据失败！响应状态码是=" + xhr.status + "说明信息=" + xhr.statusText);
+                    layer.msg("服务器忙，请稍后重试")
+                }
+            });
+            // 2.取到表格中的职位全信息
             $.ajax({
                 "url": "/job/showpage",
                 "type": "post",
@@ -38,14 +84,66 @@
                         $("#jobPageBody").append("<tr><td colspan='8'>抱歉！没有查询到您要的数据！</td></tr>");
                     }
                     var jobs = pageInfo.content;
-                    console.log("本次查询到的数据量："+pageInfo.totalElements)
+                    // console.log("本次查询到的数据量："+pageInfo.totalElements)
                     total = pageInfo.totalElements;
-                    console.log("本次查询到的数据所在页："+pageInfo.number)
+                    // console.log("本次查询到的数据所在页："+pageInfo.number)
                     curIdx = pageInfo.number;
                     fillTableBody(jobs);
+                    $(".starImg").click(function (){
+                        var jobId = this.id;
+                        var userId = $("#userIdInput").val();
+                        // console.log(jobId + " " + userId);
+                        // 发送ajax请求将两个id传到controller，存入中间表，返回相应，layer打印成功即可
+                        // 判断是否已收藏\
+                        // console.log(starArr)
+                        // console.log("图片点击后获取到的收藏列表：" + starArr)
+                        // nmd，这id是个字符串我去了。。。
+                        var isStar = $.inArray(parseInt(jobId), starArr);
+                        // console.log(isStar);
+                        if (isStar >= 0) {
+                            $.ajax({
+                                "url": "/job/removestar",
+                                "type": "post",
+                                "async": false,
+                                "data": {
+                                    "jobId": jobId,
+                                    "userId": userId
+                                },
+                                success: function () {
+                                    // generatePage(pageNum)
+                                    // 何必重新生成，直接修改样式即可? 不，必须重新生成，重新获取starArr
+                                    generatePage(pageNum)
+                                    layer.msg("取消收藏成功")
+                                },
+                                error: function () {
+                                    layer.msg("服务器忙，请稍候重试")
+                                }
+                            })
+                        } else {
+                            $.ajax({
+                                "url": "/job/savestar",
+                                "type": "post",
+                                "data": {
+                                    "jobId": jobId,
+                                    "userId": userId
+                                },
+                                "async": false,
+                                success: function () {
+                                    // var thisImg = "#" + jobId;
+                                    // $(thisImg).attr("src", "img/star-off.jpg");
+                                    generatePage(pageNum)
+                                    layer.msg("收藏成功，可在右上角点击个人账户查看收藏")
+                                },
+                                error: function () {
+                                    layer.msg("服务器忙，请稍候重试")
+                                }
+                            })
+                        }
+                    });
                 },
                 error: function (xhr) {
-                    layer.msg("服务器端程序调用失败！响应状态码是=" + xhr.status + "说明信息=" + xhr.statusText);
+                    console.log("获取表格数据失败，可能是查询不到数据！响应状态码是=" + xhr.status + "说明信息=" + xhr.statusText);
+                    layer.msg("未查询到数据")
                 }
             });
         }
@@ -73,7 +171,7 @@
                     firstJobId = jobId;
                 }
                 var jobIdTd = "<td>" + jobId + "</td>"
-                var jobNameTd = "<td><a href='" + url + "'>" + jobName + "</td>"
+                var jobNameTd = "<td><a href='" + url + "' target='_blank'>" + jobName + "</td>"
                 var companyNameTd = "<td>" + companyName + "</td>"
                 var jobInfoTd = "<td><span class='detail' id='jobInfo" + jobId + "'>详情</span>" + "</td>"
                 let companyInfoTd = "<td><span class='detail' id='companyInfo" + jobId + "'>详情</span>" + "</td>";
@@ -82,8 +180,10 @@
                 var companyAddrTd = "<td>" + companyAddr + "</td>"
                 var timeTd = "<td>" + time + "</td>"
 
-                // 通过button标签的id属性把roleId值传递到button按钮的单击响应函数中
-                var starBtn = "<button id='" + jobId + "' type='button' class='btn btn-success btn-xs checkBtn'><i class=' glyphicon glyphicon-check'></i></button>";
+                // 判断当前职位是否已被收藏，以确定小星星样式
+                var isStar = $.inArray(jobId, starArr);
+                var src = isStar >= 0 ? "img/star-on.png" : "img/star-off.jpg";
+                var starBtn = "<img id='" + jobId + "' class='starImg' src="+src+"/>";
                 var buttonTd = "<td>" + starBtn + "</td>";
                 var tr = "<tr>" + jobIdTd + jobNameTd + companyNameTd + jobInfoTd + companyInfoTd + companyAddrTd + timeTd + buttonTd + "</tr>";
                 $("#jobPageBody").append(tr);
@@ -111,10 +211,12 @@
                 }
             }
         }
+
         // 生成分页页码导航条
         function generateNavigator() {
+            // console.log("gn被调用！！")
             // 调用 pagination()函数
-            $("#Pagination").pagination(total, {
+            $("#paginationGet").pagination(total, {
                 num_edge_entries: 3,
                 num_display_entries: 5,
                 callback: paginationCallBack,
@@ -126,7 +228,7 @@
         }
         // 翻页时的回调函数
         function paginationCallBack(index, jq) {
-            console.log("cb被调用！！")
+            // console.log("cb被调用！！")
             // 调用分页函数
             generatePage(index);
             // 取消页码超链接的默认行为
@@ -136,7 +238,22 @@
             // 2.调用执行分页的函数，执行分页的效果
             generatePage(0);
             generateNavigator();
-
+            // $("#paginationGet").pagination(total, {
+            //     num_edge_entries: 3,
+            //     num_display_entries: 5,
+            //     callback: paginationCallBack,
+            //     items_per_page: pageSize,
+            //     current_page: curIdx,
+            //     prev_text: "上一页",
+            //     next_text: "下一页"
+            // });
+            // function paginationCallBack(index, jq) {
+            //     console.log("cb被调用！！")
+            //     // 调用分页函数
+            //     generatePage(index);
+            //     // 取消页码超链接的默认行为
+            //     return false;
+            // }
             $(".list-group-item").click(function(){
                 if ( $(this).find("ul") ) {
                     $(this).toggleClass("tree-closed");
@@ -157,6 +274,44 @@
                 generateNavigator();
             });
 
+            // 4.给导航栏收藏按钮绑定单响函数，调出模态框，展示收藏数据
+            $("#getStar").click(
+                function (){
+                    $.ajax({
+                        "url": "/job/getfullstar",
+                        "type": "post",
+                        "async": false,
+                        "data": {
+                            userId: $("#userIdInput").val()
+                        },
+                        "dataType": "json",
+                        success: function (jobList){
+                            var starHtml = "";
+                            for (let i = 0; i < jobList.length; i++) {
+                                var jobName = jobList[i].jobName;
+                                var url = jobList[i].url;
+                                var companyName = jobList[i].companyName;
+                                var companyAddr = jobList[i].companyAddr;
+                                var time = jobList[i].time;
+
+                                var starSubHtml =
+                                    "<a href='" + url + "'>" + jobName + "</a>"
+                                    + "<br>" + companyName
+                                    + "&emsp;&emsp;" + companyAddr
+                                    + "&emsp;&emsp;" + time + "<br><hr/>";
+                                starHtml += starSubHtml;
+                            }
+                            $("#starShow").html(starHtml);
+                            $("#starModal").modal("show");
+                        },
+                        error: function (xhr){
+                            console.log("获取已收藏清单失败！响应状态码是=" + xhr.status + "说明信息=" + xhr.statusText);
+                            layer.msg("服务器忙，请稍后重试")
+                        }
+                    })
+                    $("#starModal").modal("show");
+                }
+            )
             //5.给模态框确认按钮绑定单响函数
             $("#jobCloseBtn").click(
                 function (){
@@ -168,14 +323,13 @@
                     $("#companyModal").modal("hide");
                 }
             )
+            $("#starCloseBtn").click(
+                function (){
+                    $("#starModal").modal("hide");
+                }
+            )
 
-            // 6.给收藏按钮绑定单响函数
-            $(".checkBtn").click(function () {
-                var jobId = this.id;
-                var userId = $("#userIdInput").val();
-                // 发送ajax请求将两个id传到controller，存入中间表，返回相应，layer打印成功即可
-                $.ajax()
-            })
+
         });
     </script>
     <style>
@@ -186,15 +340,13 @@
         .tree-closed {
             height : 40px;
         }
-        .tree-expanded {
-            height : auto;
-        }
     </style>
 </head>
 <body>
     <input id="userIdInput" type="text" th:value="${session.user.id}" hidden="hidden">
     <div th:replace="modal-job :: job"></div>
     <div th:replace="modal-company :: company"></div>
+    <div th:replace="modal-star :: star"></div>
     <div th:replace="head :: head"></div>
     <div class="container-fluid">
         <div class="row">
@@ -239,7 +391,7 @@
                                 <tfoot>
                                 <tr>
                                     <td colspan="8" align="center">
-                                        <div id="Pagination" class="pagination"><!-- 这里显示分页 --></div>
+                                        <div id="paginationGet" class="pagination"><!-- 这里显示分页 --></div>
                                     </td>
                                 </tr>
                                 </tfoot>

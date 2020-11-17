@@ -2,15 +2,36 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
-    <title>首页</title>
+    <title>地区统计</title>
     <base th:href="@{/}">
     <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="css/font-awesome.min.css">
     <link rel="stylesheet" href="css/main.css">
-    <script src="jquery/jquery-2.1.1.min.js"></script>
-    <script src="bootstrap/js/bootstrap.js"></script>
+
+    <style>
+        .tree li {
+            list-style-type: none;
+            cursor:pointer;
+        }
+        .tree-closed {
+            height : 40px;
+        }
+    </style>
+
+    <script type="text/javascript" src="jquery/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="bootstrap/js/bootstrap.js"></script>
+    <script type="text/javascript" src="script/docs.min.js"></script>
+    <script type="text/javascript" src="layer/layer.js"></script>
+    <script type="text/javascript" src="script/echarts.js"></script>
+
     <script type="text/javascript">
-        $(function () {
+
+        $(function (){
+            $("#queryPage").click(
+                function (){
+                    window.location.href = "/job/show"
+                }
+            )
             $(".list-group-item").click(function(){
                 if ( $(this).find("ul") ) {
                     $(this).toggleClass("tree-closed");
@@ -20,12 +41,7 @@
                         $("ul", this).show("fast");
                     }
                 }
-            });
-            $("#queryPage").click(
-                function (){
-                    window.location.href = "/job/show"
-                }
-            )
+            })
 
             // 给导航栏收藏按钮绑定单响函数，调出模态框，展示收藏数据
             $("#getStar").click(
@@ -35,11 +51,10 @@
                         "type": "post",
                         "async": false,
                         "data": {
-                            userId: $("#userIdInput").val()
+                            userId: parseInt($("#userIdInput").val())
                         },
                         "dataType": "json",
                         success: function (jobList){
-                            // console.log("获取收藏请求成功")
                             var starHtml = "";
                             for (let i = 0; i < jobList.length; i++) {
                                 var jobName = jobList[i].jobName;
@@ -55,7 +70,6 @@
                                     + "&emsp;&emsp;" + time + "<br><hr/>";
                                 starHtml += starSubHtml;
                             }
-                            // console.log(starHtml)
                             $("#starShow").html(starHtml);
                             $("#starModal").modal("show");
                         },
@@ -72,17 +86,9 @@
                     $("#starModal").modal("hide");
                 }
             )
-        });
+        })
     </script>
-    <style>
-        .tree li {
-            list-style-type: none;
-            cursor:pointer;
-        }
-        .tree-closed {
-            height : 40px;
-        }
-    </style>
+
 </head>
 <body>
     <input id="userIdInput" type="text" th:value="${session.user.id}" hidden="hidden">
@@ -92,10 +98,9 @@
         <div class="row">
             <div th:replace="sidebar :: sidebar"></div>
             <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-                <img src="img/job.jpg" style="width: 1141px;height: 620px">
+                test1
             </div>
         </div>
     </div>
-
 </body>
 </html>

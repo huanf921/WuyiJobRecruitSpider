@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpSession;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/job")
@@ -69,7 +70,38 @@ public class JobController {
         //Integer pageNum = Integer.valueOf(pageNums);
         //Integer pageSize = Integer.valueOf(pageSizes);
         Page<JobInfo> pageInfo = jobService.findJobInfoByPage(keyword, pageNum, pageSize);
-        System.out.println(pageInfo);
+        //System.out.println(pageInfo);
         return (pageInfo.getContent() == null || pageInfo.getContent().isEmpty()) ? null : pageInfo;
+    }
+
+    @RequestMapping("/getstar")
+    @ResponseBody
+    public List<Integer> getStarJob(HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        Integer userId = user.getId();
+        List<Integer> jobIdList = userService.getJobIdListByUserId(userId);
+
+        return jobIdList;
+    }
+
+    @RequestMapping("/getfullstar")
+    @ResponseBody
+    public List<Map<String, Object>> getFullStarJob(Integer userId) {
+        // jpa无法自动映射部分字段，只能映射全部
+        List<Map<String, Object>> jobList = userService.getJobListByUserId(userId);
+
+        return jobList;
+    }
+
+    @RequestMapping("/savestar")
+    @ResponseBody
+    public void saveStarJob(Integer jobId, Integer userId) {
+        userService.saveUserStar(jobId, userId);
+    }
+
+    @RequestMapping("/removestar")
+    @ResponseBody
+    public void removeStarJob(Integer jobId, Integer userId) {
+        userService.removeUserStar(jobId, userId);
     }
 }
